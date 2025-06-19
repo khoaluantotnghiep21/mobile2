@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -18,6 +19,7 @@ interface CartProduct {
 export default function CartListScreen() {
   const [cart, setCart] = useState<CartProduct[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const loadCart = async () => {
@@ -112,7 +114,7 @@ export default function CartListScreen() {
           <TouchableOpacity
             style={[styles.buyBtn, { opacity: selectedIds.length === 0 ? 0.5 : 1 }]}
             disabled={selectedIds.length === 0}
-            onPress={() => require('expo-router').useRouter().push('/cart')}
+            onPress={() => router.push('/cart')}
           >
             <Text style={styles.buyBtnText}>Mua hàng</Text>
           </TouchableOpacity>

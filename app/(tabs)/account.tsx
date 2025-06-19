@@ -1,4 +1,3 @@
-import Footer from '@/components/Footer';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -18,7 +17,9 @@ const AccountScreen: React.FC = () => {
           const user = JSON.parse(userStr);
           setUserPhone(user.numberPhone ?? user.sodienthoai ?? user.phoneNumber ?? null);
         }
-      } catch {}
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      }
     })();
   }, []);
 
@@ -32,7 +33,7 @@ const AccountScreen: React.FC = () => {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <MaterialIcons name="account-circle" size={60} color="#fff" style={{ marginBottom: 8 }} />
-        <Text style={styles.phone}>{userPhone}</Text>
+        <Text style={styles.phone}>{userPhone ?? ""}</Text>
       </View>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Tài khoản</Text>
@@ -46,7 +47,7 @@ const AccountScreen: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.item}>
           <MaterialIcons name="location-on" size={22} color="#333" style={styles.icon} />
-          <Text style={styles.itemText}>Quản lý sổ địa chi</Text>
+          <Text style={styles.itemText}>Quản lý sổ địa chỉ</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.item}>
           <MaterialIcons name="event-available" size={22} color="#333" style={styles.icon} />
@@ -64,9 +65,9 @@ const AccountScreen: React.FC = () => {
           <Text style={[styles.itemText, { color: '#FF3B30' }]}>Đăng xuất</Text>
         </TouchableOpacity>
       </View>
-      <View style={{ marginTop: 20 }}>
+      {/* <View style={{ marginTop: 20 }}>
         <Footer />
-      </View>
+      </View> */}
     </ScrollView>
   );
 };

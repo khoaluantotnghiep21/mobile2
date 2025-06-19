@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import FeaturedProducts from '../../components/FeaturedProducts';
 
 interface Product {
   id: string;
@@ -25,6 +26,22 @@ interface Product {
   }>;
   chitietdonvi: Array<{
     giaban: number;
+    donvitinh: {
+      donvitinh: string;
+    };
+  }>;
+}
+
+// Define the extended Product interface for promotional products
+interface PromotionalProduct extends Product {
+  masanpham: string;
+  khuyenmai?: {
+    tenchuongtrinh: string;
+    giatrikhuyenmai?: number;
+  };
+  chitietdonvi: Array<{
+    giaban: number;
+    giabanSauKhuyenMai?: number;
     donvitinh: {
       donvitinh: string;
     };
@@ -48,6 +65,7 @@ export default function HomeScreen() {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [loading, setLoading] = useState(true);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
@@ -55,7 +73,7 @@ export default function HomeScreen() {
     if (searchQuery.trim()) {
       setIsSearching(true);
       setShowResults(true);
-      
+
       // Clear previous timeout
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
@@ -65,12 +83,17 @@ export default function HomeScreen() {
       searchTimeoutRef.current = setTimeout(async () => {
         try {
           console.log('Searching for:', searchQuery);
+          // Thêm catch cho fetch để xử lý lỗi mạng
           const response = await fetch(
             `https://be-ecom-longchau-production-hehe.up.railway.app/product/search?query=${encodeURIComponent(searchQuery)}`
-          );
+          ).catch((error) => {
+            console.log('Lỗi kết nối API search:', error);
+            throw error;
+          });
+
           const responseData = await response.json();
           console.log('Search response:', responseData);
-          
+
           // Trích xuất mảng sản phẩm từ cấu trúc response
           if (responseData?.data?.data && Array.isArray(responseData.data.data)) {
             setSearchResults(responseData.data.data);
@@ -97,6 +120,8 @@ export default function HomeScreen() {
     };
   }, [searchQuery]);
 
+  
+
   const scrollToIndex = (index: number) => {
     flatListRef.current?.scrollToIndex({
       index,
@@ -120,6 +145,8 @@ export default function HomeScreen() {
     </View>
   );
 
+  
+
   return (
     <>
       <View style={styles.container}>
@@ -131,7 +158,7 @@ export default function HomeScreen() {
               <Image source={require('../../assets/images/menu.webp')} style={styles.menuIcon} />
             </TouchableOpacity>
             {/* Logo ở giữa */}
-            <TouchableOpacity onPress={() => router.replace('/') }>
+            <TouchableOpacity onPress={() => router.replace('/')}>
               <Image source={require('../../assets/images/logo.webp')} style={styles.logo} />
             </TouchableOpacity>
             {/* Bell hoặc các thành phần khác bên phải */}
@@ -171,8 +198,8 @@ export default function HomeScreen() {
                         }}
                       >
                         <Image
-                          source={{ 
-                            uri: item.anhsanpham.find(img => img.ismain)?.url || item.anhsanpham[0]?.url 
+                          source={{
+                            uri: item.anhsanpham.find((img) => img.ismain)?.url || item.anhsanpham[0]?.url,
                           }}
                           style={styles.searchResultImage}
                         />
@@ -195,7 +222,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Main content */}
-        <ScrollView 
+        <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1 }}
         >
@@ -209,14 +236,18 @@ export default function HomeScreen() {
               renderItem={({ item }) => (
                 <Image source={item} style={styles.banner} />
               )}
-              keyExtractor={(_, index) => index.toString()}
-            />
+              keyExtractor={(_, index) => index.toString()}            />
             {renderPagination()}
             <CategorySection />
+            
+            {/* Featured Products Section */}
+            <FeaturedProducts />
+           
           </View>
           
           {/* Footer */}
           <Footer />
+          
         </ScrollView>
       </View>
 
@@ -230,7 +261,8 @@ const styles = StyleSheet.create({
   searchContainer: {
     position: 'relative',
     zIndex: 1,
-  },    searchResults: {
+  },
+  searchResults: {
     position: 'absolute',
     top: '100%',
     left: 0,
@@ -343,5 +375,89 @@ const styles = StyleSheet.create({
   paginationDotActive: {
     width: 24,
     backgroundColor: '#0078D4',
+  },
+  section: {
+    marginTop: 24,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  promotionalProductCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 8,
+    width: 160,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: '#eee',
+    position: 'relative',
+  },
+  discountTag: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: '#FF3B30',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    zIndex: 2,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+  },
+  discountText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  promotionalProductImage: {
+    width: '100%',
+    height: 100,
+    marginBottom: 8,
+    borderRadius: 8,
+    backgroundColor: '#f2f2f2',
+  },
+  promotionalProductInfo: {
+    flexGrow: 1,
+  },
+  promotionalProductTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#222',
+    marginBottom: 4,
+    height: 40, // Limit to 2 lines
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginVertical: 4,
+  },
+  oldPrice: {
+    fontSize: 12,
+    color: '#999',
+    textDecorationLine: 'line-through',
+    marginRight: 6,
+  },
+  promotionalPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#0078D4',
+  },
+  unitText: {
+    fontSize: 12,
+    color: '#666',
   },
 });

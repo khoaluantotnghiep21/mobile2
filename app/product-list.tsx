@@ -1,3 +1,4 @@
+import Footer from '@/components/Footer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -27,10 +28,11 @@ interface Product {
     dinhluong: number;
     giaban: number;
     donvitinh: { donvitinh: string };
+    giabanSauKhuyenMai?: number;
   }[];
   khuyenmai?: {
     tenchuongtrinh: string;
-    tile?: number;
+    giatrikhuyenmai?: number;
   };
   gianhap: number;
   thuockedon: boolean; // Thêm trường này
@@ -83,8 +85,20 @@ export default function ProductListScreen() {
       const mainImg = item.anhsanpham.find(img => img.ismain === true);
       imageUrl = mainImg ? mainImg.url : item.anhsanpham[0].url;
     }
+    
+    // Tính phần trăm giảm giá nếu có
+    let discountPercent = 0;
+    if (selectedUnit?.giabanSauKhuyenMai && selectedUnit.giaban > selectedUnit.giabanSauKhuyenMai) {
+      discountPercent = Math.round(((selectedUnit.giaban - selectedUnit.giabanSauKhuyenMai) / selectedUnit.giaban) * 100);
+    }
+    
     return (
       <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => router.push({ pathname: '/product-detail', params: { masanpham: item.masanpham } })}>
+        {discountPercent > 0 && (
+          <View style={styles.discountTag}>
+            <Text style={styles.discountText}>-{discountPercent}%</Text>
+          </View>
+        )}
         <Image
           source={imageUrl ? { uri: imageUrl } : require('../assets/images/danhmuc.webp')}
           style={styles.image}
@@ -117,9 +131,16 @@ export default function ProductListScreen() {
           <Text style={{ fontSize: 13, color: '#888', marginBottom: 6, marginTop: 2 }}>Đơn vị tính: Không rõ</Text>
         )}
         <View style={styles.priceRow}>
-          <Text style={styles.price}>{selectedUnit ? selectedUnit.giaban.toLocaleString() + 'đ' : 'Không rõ'}</Text>
-          <Text style={styles.unit}>/ {selectedUnit ? selectedUnit.donvitinh.donvitinh : 'Không rõ'}</Text>
+          {selectedUnit?.giabanSauKhuyenMai ? (
+            <>
+              <Text style={styles.oldPrice}>{selectedUnit.giaban.toLocaleString()}đ</Text>
+              <Text style={styles.price}>{selectedUnit.giabanSauKhuyenMai.toLocaleString()}đ</Text>
+            </>
+          ) : (
+            <Text style={styles.price}>{selectedUnit ? selectedUnit.giaban.toLocaleString() + 'đ' : 'Không rõ'}</Text>
+          )}
         </View>
+        <Text style={styles.unit}>/ {selectedUnit ? selectedUnit.donvitinh.donvitinh : 'Không rõ'}</Text>
         <Text style={{ fontSize: 12, color: '#888', marginBottom: 8 }}>
           {units.length > 1 ? `Hộp ${units.map(u => u.dinhluong + ' ' + u.donvitinh.donvitinh).join(' | ')}` : ''}
         </Text>
@@ -176,7 +197,7 @@ export default function ProductListScreen() {
                 anhsanpham: [{ url: mainImage }],
                 chitietdonvi: [{
                   dinhluong: selectedUnit.dinhluong,
-                  giaban: selectedUnit.giaban,
+                  giaban: selectedUnit.giabanSauKhuyenMai || selectedUnit.giaban,
                   donvitinh: { donvitinh: selectedUnit.donvitinh.donvitinh }
                 }],
                 dinhluong: selectedUnit.dinhluong,
@@ -270,6 +291,8 @@ export default function ProductListScreen() {
         scrollEnabled={false}
         ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>Không có sản phẩm nào</Text>}
       />
+      
+      <Footer />
     </ScrollView>
   );
 }
@@ -307,6 +330,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     zIndex: 2,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
   },
   discountText: {
     color: '#fff',
@@ -330,23 +358,24 @@ const styles = StyleSheet.create({
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 2,
+    flexWrap: 'wrap',
+    marginVertical: 4,
   },
   price: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#0078D4',
-    marginRight: 8,
   },
   oldPrice: {
-    fontSize: 13,
-    color: '#888',
+    fontSize: 14,
+    color: '#999',
     textDecorationLine: 'line-through',
+    marginRight: 6,
   },
   unit: {
     fontSize: 12,
     color: '#666',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   buyButton: {
     backgroundColor: '#0078D4',

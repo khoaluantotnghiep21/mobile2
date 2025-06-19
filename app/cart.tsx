@@ -177,6 +177,7 @@ export default function CartScreen() {
       <Image source={item.anhsanpham?.[0]?.url ? { uri: item.anhsanpham[0].url } : require('../assets/images/danhmuc.webp')} style={styles.itemImage} />
       <View style={{ flex: 1, marginLeft: 12 }}>
         <Text style={styles.itemName} numberOfLines={2}>{item.tensanpham}</Text>
+        {/* Hiển thị giá (đã được cập nhật để sử dụng giá sau khuyến mãi khi thêm vào giỏ hàng) */}
         <Text style={styles.itemPrice}>
           {item.chitietdonvi?.[0]?.giaban?.toLocaleString() || 'Không rõ'}đ
           <Text style={{ color: '#888' }}>
@@ -285,6 +286,7 @@ export default function CartScreen() {
                 />
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.itemName} numberOfLines={2}>{item.tensanpham}</Text>
+                  {/* Hiển thị giá (đã được cập nhật để sử dụng giá sau khuyến mãi khi thêm vào giỏ hàng) */}
                   <Text style={styles.itemPrice}>
                     {item.chitietdonvi?.[0]?.giaban?.toLocaleString() || 'Không rõ'}đ
                     <Text style={{ color: '#888' }}>

@@ -1,3 +1,4 @@
+import Footer from '@/components/Footer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -15,7 +16,6 @@ import {
 } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import SideDrawer from '../components/SideDrawer';
-import Footer from '@/components/Footer';
 
 const { width } = Dimensions.get('window');
 
@@ -42,6 +42,7 @@ interface ProductDetail {
   chitietdonvi: {
     dinhluong: number;
     giaban: number;
+    giabanSauKhuyenMai?: number;
     donvitinh: { donvitinh: string };
   }[];
   chitietthanhphan: {
@@ -135,7 +136,7 @@ export default function ProductDetailScreen() {
         // Đơn vị tính đã chọn
         const selectedDonvi = {
           dinhluong: selectedUnit.dinhluong,
-          giaban: selectedUnit.giaban,
+          giaban: selectedUnit.giabanSauKhuyenMai || selectedUnit.giaban,
           donvitinh: { donvitinh: selectedUnit.donvitinh.donvitinh }
         };
 
@@ -186,6 +187,14 @@ export default function ProductDetailScreen() {
             </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.imageCarousel}>
+          {/* Discount badge if applicable */}
+          {selectedUnit?.giabanSauKhuyenMai && selectedUnit.giaban > selectedUnit.giabanSauKhuyenMai && (
+            <View style={styles.discountTag}>
+              <Text style={styles.discountText}>
+                -{Math.round(((selectedUnit.giaban - selectedUnit.giabanSauKhuyenMai) / selectedUnit.giaban) * 100)}%
+              </Text>
+            </View>
+          )}
           <FlatList
             data={images}
             horizontal
@@ -231,7 +240,14 @@ export default function ProductDetailScreen() {
             <Text style={{ fontSize: 14, color: '#888', marginVertical: 8 }}>Đơn vị tính: Không rõ</Text>
           )}
           <View style={styles.priceRow}>
-            <Text style={styles.price}>{selectedUnit ? selectedUnit.giaban.toLocaleString() + 'đ' : 'Không rõ'}</Text>
+            {selectedUnit?.giabanSauKhuyenMai ? (
+              <>
+                <Text style={styles.oldPrice}>{selectedUnit.giaban.toLocaleString()}đ</Text>
+                <Text style={styles.price}>{selectedUnit.giabanSauKhuyenMai.toLocaleString()}đ</Text>
+              </>
+            ) : (
+              <Text style={styles.price}>{selectedUnit ? selectedUnit.giaban.toLocaleString() + 'đ' : 'Không rõ'}</Text>
+            )}
             <Text style={styles.unit}>/ {selectedUnit ? selectedUnit.donvitinh.donvitinh : 'Không rõ'}</Text>
           </View>
           
@@ -328,6 +344,27 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    position: 'relative',
+  },
+  discountTag: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    backgroundColor: '#FF3B30',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    zIndex: 2,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+  },
+  discountText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   carouselImage: {
     width: width * 0.7,
@@ -358,17 +395,24 @@ const styles = StyleSheet.create({
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    flexWrap: 'wrap',
+    marginBottom: 12,
   },
   price: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#0078D4',
+  },
+  oldPrice: {
+    fontSize: 18,
+    color: '#999',
+    textDecorationLine: 'line-through',
     marginRight: 8,
   },
   unit: {
-    fontSize: 15,
+    fontSize: 16,
     color: '#666',
+    marginLeft: 4,
   },
   buyButton: {
     backgroundColor: '#0078D4',
